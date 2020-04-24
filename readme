@@ -1,0 +1,32 @@
+Technologies used:
+Python 3
+MySQL
+
+Libraries:
+mysql.connector
+tabulate
+inquirer
+pyfiglet
+
+
+In main.py and sjtrophy.py
+Make sure to change 'passwd' to your password that you use to login to your mysql database
+
+
+main.py
+Initializes the database tables with the data in the .csv files
+
+employee.py
+Implements functionality for employee main menu and options. There are two types of employee
+users and options: managers and associates. User ID entered when logging in determines
+whether employee is a  manager or associate
+
+sjtrophy.py
+Implements functions to execute sql queries
+
+
+
+TODO:
+Hash login passwords
+Logfile
+customer.py
