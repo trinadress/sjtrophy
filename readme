@@ -30,3 +30,14 @@ TODO:
 Hash login passwords
 Logfile
 customer.py
+
+
+{name: bob, id = 1}
+"name = bob",
+
+for key in dict
+    str += "{} = {}".format(key, dict[key])
+    if not last key
+        str +=
+
+        ' '.

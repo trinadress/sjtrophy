@@ -8,34 +8,28 @@ from tabulate import tabulate
 
 # EMPLOYEE SIDE APPLICATION
 def sign_in(msg):
-    system('clear')
-    display_sj_trophy()
-    display_message('LOGIN')
-    display_message(msg)
+    display_header(msg, 'LOGIN', 40)
 
     questions = [
         inquirer.Text('user_id',  message="USER ID".rjust(19)),
         inquirer.Text('password', message="PASSWORD".rjust(19))
     ]
-    answers  = inquirer.prompt(questions)
-    user_id  = answers['user_id']
-    password = answers['password']
-    employee = sjtrophy.verify_emp_login(user_id, password)
-
+    answers   = inquirer.prompt(questions)
+    user_id   = answers['user_id']
+    password  = answers['password']
+    employee  = sjtrophy.verify_emp_login(user_id, password)
+    branch_id = sjtrophy.select_row_from('employee', user_id)[0][5]
 
     if not employee:
         sign_in('No record of employee')
     elif sjtrophy.is_manager(user_id):
-        manager_main_menu(None, user_id)
+        manager_main_menu(None, user_id, branch_id)
     else:
-        associate_main_menu(None, user_id)
+        associate_main_menu(None, user_id, branch_id)
 
 
-def manager_main_menu(msg, emp_id):
-    system('clear')
-    display_sj_trophy()
-    display_message('MANAGER MENU')
-    display_message(msg)
+def manager_main_menu(msg, emp_id, branch_id):
+    display_header(msg, 'MANAGER MENU', 40)
 
     sel_op    = 11*' ' + 'SELECT OPTION'
     new_o     = 12*' ' + 'NEW ORDER'
@@ -58,17 +52,15 @@ def manager_main_menu(msg, emp_id):
     elif answers['option'] == view_po:
         view_orders(None, "COMPLETE")
     elif answers['option'] == mng_inv:
-        inventory(None, emp_id)
+        inventory(None, emp_id, branch_id)
     elif answers['option'] == mng_emp:
-        manage_employees(None)
+        manage_employees(None, branch_id)
     else:
         sign_in(None)
 
-def associate_main_menu(msg, emp_id):
-    system('clear')
-    display_sj_trophy()
-    display_message('ASSOCIATE MENU')
-    display_message(msg)
+
+def associate_main_menu(msg, emp_id, branch_id):
+    display_header(msg, 'ASSOCIATE MENU', 40)
 
     sel_op    = 11*' ' + 'SELECT OPTION'
     new_o     = 12*' ' + 'NEW ORDER'
@@ -90,18 +82,18 @@ def associate_main_menu(msg, emp_id):
     elif answers['option'] == view_po:
         view_orders(None, 'COMPLETE')
     elif answers['option'] == view_inv:
-        inventory(None, emp_id)
+        inventory(None, emp_id, branch_id)
     else:
         sign_in(None)
 
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ------------------------------------- MENU OPTIONS --------------------------------------------
 
-def new_order(msg, emp_id):
+def new_order(msg, emp_id, branch_id):
     system('clear')
     display_sj_trophy()
-    display_message('NEW ORDER')
-    display_message(msg)
+    display_message('NEW ORDER', 40)
+    display_message(msg, 40)
 
     new_cust = 11*' ' + "NEW CUSTOMER?"
     questions = [inquirer.Confirm('new_customer', message=new_cust, default=True)]
@@ -136,9 +128,9 @@ def new_order(msg, emp_id):
     # insert into customer_order set count, status item, design, customer, last_ud_by, total_cost
     msg = 'ORDER COMPLETE'
     if sjtrophy.is_manager(emp_id):
-        manager_main_menu(msg, emp_id)
+        manager_main_menu(msg, emp_id, branch_id)
     else:
-        associate_main_menu(msg, emp_id)
+        associate_main_menu(msg, emp_id, branch_id)
 
 
 
@@ -192,160 +184,243 @@ def view_orders(msg, status):
 
 
 
-
-
-
 def manage_inventory(msg):
     system('clear')
     display_sj_trophy()
-    display_message('INVENTORY MANAGEMENT')
-    display_message(msg)
+    display_message('INVENTORY MANAGEMENT', 40)
+    display_message(msg, 40)
 
 
-def manage_employees(msg):
+def manage_employees(msg, branch_id):
     system('clear')
     display_sj_trophy()
-    display_message('EMPLOYEE MANAGMENT')
-    display_message(msg)
+    dmsg = 'EMPLOYEE MANAGMENT'
+    display_message(dmsg, 40)
+    display_message(msg, 40)
+    branch_emp = sjtrophy.filter_search('employee', ('branch', branch_id), None)
+    display_paged_results(branch_emp, dmsg)
+    opt         = 11*' ' + 'SELECT AN OPTION'
+    add         = 12*' ' + 'ADD AN EMPLOYEE'
+    rem         = 12*' ' + 'REMOVE AN EMPLOYEE'
+    tfr         = 12*' ' + 'TRANSFER AN EMPLOYEE'
 
-    # select all employees from the same branch
     questions = [inquirer.List('option',
-                               message="SELECT AN OPTION",
-                               choices=['Add an Employee', 'Remove an Employee',
-                                        'Transfer an Employee']
+                               message=opt,
+                               choices=[add, rem, tfr]
                                )
                  ]
     answers = inquirer.prompt(questions)
-    if 'Add an Employee' == answers['option']:
+    nme    = 12*' ' + 'NAME'
+    addr   = 12*' ' + 'ADDRESS'
+    phn    = 12*' ' + 'PHONE NUMBER'
+    pw     = 12*' ' + 'TEMPORARY PASSWORD'
+    rem_id = 12*' ' + 'ENTER ID OF EMPLOYEE TO REMOVE'
+    tfr_id = 12*' ' + 'ENTER ID OF EMPLOYEE TO TRANSFER'
+    b_id   = 12*' ' + 'ENTER BRANCH ID TO TRANSFER TO'
+
+
+    if add == answers['option']:
         questions = [
-            inquirer.Text('e_name',   message="NAME"),
-            inquirer.Text('e_addr',   message="ADDRESS"),
-            inquirer.Text('e_num',    message="PHONE NUMBER"),
-            inquirer.Text('e_temp_pw',message="TEMPORARY PASSWORD")
+            inquirer.Text('e_name',   message=nme),
+            inquirer.Text('e_addr',   message=addr),
+            inquirer.Text('e_num',    message=phn),
+            inquirer.Text('e_temp_pw',message=pw)
         ]
         answers = inquirer.prompt(questions)
+        print(answers)
+        #sjtrophy.insert_into_table('employee')
         # insert employee with name, address, phone, temp_password, mgr(current_eid) and branch(current_branch)
-        print("Employee Added")
 
-    elif 'Remove an Employee' == answers['option']:
+    elif rem == answers['option']:
         questions = [
             inquirer.Text('eid',
-                          message="Enter ID of Employee to Remove")
+                          message=rem_id)
         ]
         answers = inquirer.prompt(questions)
         # Remove employee with eid
-        print("Employee Removed")
 
-    elif 'Transfer an Employee' == answers['option']:
+    elif tfr == answers['option']:
         questions = [
             inquirer.Text('eid',
-                          message="Enter ID of Employee to Transfer"),
+                          message=tfr_id),
             inquirer.Text('bid',
-                          message="Enter Transferring Branch ID")
+                          message=b_id)
         ]
         answers = inquirer.prompt(questions)
         # update employee with eid set branch = bid
-        print("Employee Transferred")
 
 
-def inventory(msg, emp_id):
-    system('clear')
-    display_sj_trophy()
-    display_message('INVENTORY')
-    display_message(msg)
 
-    sel_op    = 11*' ' + 'SELECT OPTION'
-    fltr      = 12*' ' + 'FILTER'
-    edit_inv  = 12*' ' + 'EDIT INVENTORY'
-    back      = 12*' ' + 'BACK'
-    fltr_by   = 11*' ' + 'FILTER BY'
-    type      = 10*' ' + 'TYPE'
-    cnt       = 10*' ' + 'COUNT'
-    prc       = 10*' ' + 'PRICE'
+def inventory(msg, emp_id, branch_id):
+    sel_op     = 11*' ' + 'SELECT OPTION'
+    sel_brnch  = 11*' ' + 'SELECT BRANCH'
+    branch     = 12*' ' + 'BRANCH'
+    fltr       = 12*' ' + 'FILTER'
+    edit_inv   = 12*' ' + 'EDIT INVENTORY'
+    back       = 12*' ' + 'BACK'
+    fltr_by    = 11*' ' + 'FILTER BY'
+    type       = 10*' ' + 'TYPE'
+    cnt        = 10*' ' + 'COUNT'
+    prc        = 10*' ' + 'PRICE'
+    curr_brnch = branch_id
+    branches   = []
+    branch_map = {}
+    fmt_brnch  = ''
 
-    if sjtrophy.is_manager(emp_id):
-        questions = [inquirer.List('option', message=sel_op, choices=[fltr, edit_inv, back])]
-    else:
-        questions = [inquirer.List('option', message=sel_op, choices=[fltr, back])]
-    answers = inquirer.prompt(questions)
-
-    if answers['option']   == fltr:
-        questions = [inquirer.Checkbox('filter_options', message=fltr_by, choices=[type, cnt, prc])]
-        answers   = inquirer.prompt(questions)
-        filter = ()
-        for op in answers['filter_options']:
-            if op == type:
-                filter += ('i_type',)
-            if op == cnt:
-                filter += ('count',)
-            if op == prc:
-                filter += ('i_price',)
-        display_inventory(None, filter, emp_id)
-    elif answers['option'] == edit_inv:
-        edit_inventory(None)
-    elif sjtrophy.is_manager(emp_id):
-        manager_main_menu(None, emp_id)
-    else:
-        associate_main_menu(None, emp_id)
-
-
-def edit_inventory(msg):
-    system('clear')
-    display_sj_trophy()
-    display_message('INVENTORY')
-    display_message(msg)
-
-
-def display_inventory(msg, filter, emp_id):
-    index          = 0
-    invtry         = sjtrophy.sort_inventory(filter)
-    invtry_divided = list_of_chunks(invtry[0], 10)
-    length_of_id   = len(invtry_divided)
-    sel_op         = 11*' ' + 'SELECT OPTION'
-    next           = 12*' ' + 'NEXT'
-    prev           = 12*' ' + 'PREV'
-    back           = 12*' ' + 'BACK'
-    dflt           = next
+    for index in range(1,11):
+        fmt_brnch = 12*' ' + 'BRANCH {}'.format(index)
+        branches.append(fmt_brnch)
+        branch_map[fmt_brnch] = index
+        #TO DO: add branch locations
+    branches.append(back)
 
     while True:
-        system('clear')
-        display_sj_trophy()
-        display_message('INVENTORY')
-        display_message(msg)
-        print(tabulate(invtry_divided[index], headers=invtry[1], tablefmt='fancy_grid'))
-        print('PAGE {} OF {}'.format(index + 1, length_of_id))
+        display_header(msg, 'INVENTORY', 40)
 
-        questions = [inquirer.List('option', message=sel_op, choices=[next, prev, back], default=dflt)]
+        if sjtrophy.is_manager(emp_id):
+            questions = [inquirer.List('option', message=sel_op, choices=[branch, fltr, edit_inv, back])]
+        else:
+            questions = [inquirer.List('option', message=sel_op, choices=[branch, fltr, back])]
+        answers = inquirer.prompt(questions)
+
+        if answers['option']   == branch:
+            questions  = [inquirer.List('sel_brnch', message=sel_brnch, choices=branches)]
+            answers    = inquirer.prompt(questions)
+            if answers['sel_brnch'] != back:
+                curr_brnch = branch_map[answers['sel_brnch']]
+                continue
+            else:
+                continue
+        elif answers['option'] == fltr:
+            questions  = [inquirer.Checkbox('filter_options', message=fltr_by, choices=[type, cnt, prc])]
+            answers    = inquirer.prompt(questions)
+            filter     = []
+            for op in answers['filter_options']:
+                if op == type:
+                    filter.append('i_type')
+                if op == cnt:
+                    filter.append('count')
+                if op == prc:
+                    filter.append('i_price')
+            where_condition = [('branch', curr_brnch)]
+            filtered_table = sjtrophy.filter_search('item', where_condition, filter)
+            display_paged_results(filtered_table, 'INVENTORY')
+        elif answers['option'] == edit_inv:
+            edit_inventory(None, emp_id, branch_id)
+        elif sjtrophy.is_manager(emp_id):
+            manager_main_menu(None, emp_id, branch_id)
+        else:
+            associate_main_menu(None, emp_id, branch_id)
+
+
+def edit_inventory(msg, emp_id, branch_id):
+    display_header(msg, 'INVENTORY', 40)
+
+    sel_op    = 11*' ' + 'SELECT OPTION'
+    upd_itm   = 12*' ' + 'UPDATE ITEM'
+    add_itm   = 12*' ' + 'ADD ITEM'
+    rmv_itm   = 12*' ' + 'REMOVE ITEM'
+    back      = 12*' ' + 'BACK'
+    questions = [inquirer.List('option', message=sel_op, choices=[upd_itm, add_itm, rmv_itm, back])]
+    answers   = inquirer.prompt(questions)
+
+    if answers['option']   == upd_itm:
+        update_item(None, emp_id, branch_id)
+    elif answers['option'] == add_itm:
+        add_item(None, emp_id, branch_id)
+    elif answers['option'] == rmv_itm:
+        remove_item(None, emp_id, branch_id)
+    else:
+        inventory(msg, emp_id, branch_id)
+
+
+def update_item(msg, emp_id, branch_id):
+
+    while True:
+        display_header(msg, 'INVENTORY', 40)
+
+        sel_op    = 11*' ' + 'SELECT OPTION'
+        press     = 11*' ' + 'PRESS'
+        done      = 12*' ' + 'DONE'
+        upd_price = 12*' ' + 'UPDATE PRICE'
+        upd_count = 12*' ' + 'UPDATE COUNT'
+        back      = 12*' ' + 'BACK'
+        itmid     = 11*' ' + 'ENTER ITEM ID'
+        new_price = 11*' ' + 'ENTER NEW PRICE'
+        new_cnt   = 11*' ' + 'ENTER NEW COUNT'
+        val_name  = ''
+        attr_name = ''
+
+        questions = [inquirer.List('option', message=sel_op, choices=[upd_price, upd_count, back])]
         answers   = inquirer.prompt(questions)
 
-        if answers['option']   == next:
-            index = (index + 1) % length_of_id
-            dflt = next
-            continue
-        elif answers['option'] == prev:
-            index = (index - 1) % length_of_id
-            dflt = prev
-            continue
+        if answers['option']   == upd_price:
+            val_name  = new_price
+            attr_name = 'i_price'
+        elif answers['option'] == upd_count:
+            val_name  = new_cnt
+            attr_name = 'count'
         else:
-            break
+            inventory(msg, emp_id, branch_id)
 
-    inventory(None, emp_id)
+        questions = [inquirer.Text('itm_id',        message=itmid)]
+        answers   = inquirer.prompt(questions)
+        item_id   = answers['itm_id']
+        display_row('item', item_id)
 
-    # for chunk in tupls:
-    #     print(tabulate(chunk, headers=invtry[1], tablefmt='fancy_grid') )
+        questions = [inquirer.Text('update_value', message=val_name)]
+        answers   = inquirer.prompt(questions)
+        set_value = [(attr_name, answers['update_value'])]
+        sjtrophy.update_row_values('item', set_value, item_id)
+        display_row('item', item_id)
 
-    #query inventory
+        questions = [inquirer.List('done', message=press, choices=[done])]
+        answers   = inquirer.prompt(questions)
+
+        if answers['done'] == done:
+            continue
+
+
+def add_item(msg, emp_id, branch_id):
+    press     = 11*' ' + 'PRESS'
+    done      = 12*' ' + 'DONE'
+    type      = 11*' ' + 'ENTER TYPE'
+    count     = 11*' ' + 'ENTER COUNT'
+    price     = 11*' ' + 'ENTER PRICE'
+    row_vals  = []
+    questions = [inquirer.Text('type',  message=type),
+                 inquirer.Text('count', message=count),
+                 inquirer.Text('price', message=price)]
+    answers   = inquirer.prompt(questions)
+
+    row_vals = [answers['type'], answers['count'], answers['price'], branch_id]
+    sjtrophy.insert_item(row_vals)
+
+    questions = [inquirer.List('done', message=press, choices=[done])]
+    answers   = inquirer.prompt(questions)
+
+    if answers['done'] == done:
+        return
+
+
+
+def remove_item(msg, emp_id, branch_id):
+    print("remove item")
+
+
 # +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # ---------------------------------------- HELPER -----------------------------------------------
 
-def display_message(msg):
+def display_header(msg, header_name, header_size):
+    system('clear')
+    display_sj_trophy()
+    display_message(header_name, header_size)
+    display_message(msg, header_size)
+
+
+def display_message(msg, width):
     if not msg: return
-    width = 40
-    border = '+-' + '-' * width + '-+'
-    print(border.center(60))
-    for line in wrap(msg, width):
-        print('| {0:^{1}} |'.format(line, width).center(60))
-    print(border.center(60))
+    print(format_str(msg, width))
 
 
 def display_sj_trophy():
@@ -356,15 +431,90 @@ def display_sj_trophy():
     print(border)
 
 
-def display_results(tuple_list, attr_list):
-    print('\n' + tabulate(tuple_list, headers=attr_list, tablefmt='fancy_grid') +'\n' )
+def display_row(table, row_id):
+    row = sjtrophy.select_row_from(table, row_id)
+    sjtrophy.display_results(row[0], row[1])
 
+
+def display_paged_results(results, message):
+    index          = 0
+    table_divided = list_of_chunks(results[0], 10)
+    length_of_id   = len(table_divided)
+    sel_op         = 11*' ' + 'SELECT OPTION'
+    next           = 12*' ' + 'NEXT'
+    prev           = 12*' ' + 'PREV'
+    back           = 12*' ' + 'BACK'
+    dflt           = next
+
+    while True:
+        display_header(None, message, 40)
+        print(tabulate(table_divided[index], headers=results[1], tablefmt='fancy_grid'))
+        print('PAGE {} OF {}'.format(index + 1, length_of_id))
+
+        questions = [inquirer.List('option', message=sel_op, choices=[next, prev, back], default=dflt)]
+        answers   = inquirer.prompt(questions)
+
+        if answers['option']   == next:
+            index = (index + 1) % length_of_id
+            dflt  = next
+            continue
+        elif answers['option'] == prev:
+            index = (index - 1) % length_of_id
+            dflt  = prev
+            continue
+        else:
+            break
+
+
+
+def display_results(table, where, order_by, emp_id):
+    index          = 0
+    invtry         = sjtrophy.filter_search(table, where, order_by)
+    invtry_divided = list_of_chunks(invtry[0], 10)
+    length_of_id   = len(invtry_divided)
+    sel_op         = 11*' ' + 'SELECT OPTION'
+    next           = 12*' ' + 'NEXT'
+    prev           = 12*' ' + 'PREV'
+    back           = 12*' ' + 'BACK'
+    dflt           = next
+
+    while True:
+        display_header(None, 'INVENTORY', 40)
+        print(tabulate(invtry_divided[index], headers=invtry[1], tablefmt='fancy_grid'))
+        print('PAGE {} OF {}'.format(index + 1, length_of_id))
+
+        questions = [inquirer.List('option', message=sel_op, choices=[next, prev, back], default=dflt)]
+        answers   = inquirer.prompt(questions)
+
+        if answers['option']   == next:
+            index = (index + 1) % length_of_id
+            dflt  = next
+            continue
+        elif answers['option'] == prev:
+            index = (index - 1) % length_of_id
+            dflt  = prev
+            continue
+        else:
+            break
 
 # Yield successive n-sized chunks from lst.
 def divide_chunks(lst, n):
     # looping till length of lst
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
+
+
+def format_str(msg, width):
+    fmt_str  = ''
+    border   = '+-' + '-' * width + '-+'
+    border   = border.center(60)
+    fmt_str += border
+    fmt_str += '\n'
+    for line in wrap(msg, width):
+        fmt_str += '| {0:^{1}} |'.format(line, width).center(60)
+        fmt_str += '\n'
+    fmt_str += border
+    return fmt_str
 
 
 def list_of_chunks(lst, chunk_size):
@@ -397,5 +547,3 @@ def search_customer():
     # return cid or null
 
 sign_in(None)
-
-
