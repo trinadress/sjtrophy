@@ -1,6 +1,7 @@
+import employee
 import csv
 import mysql.connector
-
+import bcrypt
 
 mydb = mysql.connector.connect(
     host="localhost",
@@ -11,10 +12,12 @@ mydb = mysql.connector.connect(
 
 cursor = mydb.cursor()
 
+
 #-----------------------------------------EMPLOYEE DATA-------------------------------------------------------------
-csv_data = csv.reader(open('employee.csv', 'r'))
+csv_data = csv.reader(open('employee.csv'))
 sql_script = "INSERT INTO employee(e_name, e_addr, e_phone, e_pw) VALUES (%s, %s, %s, %s)"
 for row in csv_data:
+    row[3] = employee.encrypt_pw(row[3], employee.salt)
     cursor.execute(sql_script, row)
 
 #-----------------------------------------BRANCH DATA---------------------------------------------------------------

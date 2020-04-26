@@ -24,7 +24,7 @@ CREATE TABLE employee (
     e_name		varchar(50) not null,
     e_addr		varchar(100),
     e_phone		varchar(10),
-    e_pw        varchar(12),
+    e_pw        varchar(100),
     branch		integer,
     sup_id		integer,
     primary key	(e_id),
