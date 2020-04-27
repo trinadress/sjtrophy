@@ -1,0 +1,59 @@
+
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+INFO:root:Selected option
+INFO:root:Managing employees
+INFO:root:Adding an employee
+INFO:root:Managing employees
+INFO:root:Viewing employees
+INFO:root:Managing employees
+INFO:root:Returning to main menu
+INFO:root:Manager logged in
+INFO:root:Selected option
+INFO:root:Managing inventory
+INFO:root:Manager logged in
+INFO:root:Selected option
+INFO:root:Signing in
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Viewing Orders
+INFO:root:Filtering results
+INFO:root:Filtering results
+INFO:root:Editing orders
+INFO:root:Editing orders
+INFO:root:Returning to main menu
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Signing in
+INFO:root:Sign in successful
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Creating new order
+INFO:root:Manager logged in
+DEBUG:root:Selected option
+INFO:root:Viewing Orders
+INFO:root:Filtering results

@@ -5,11 +5,15 @@ import bcrypt
 from os import system, name
 from textwrap import wrap
 from tabulate import tabulate
+import logging
+
+logging.basicConfig(filename='employee.log', level=logging.DEBUG)
 
 salt = bcrypt.gensalt()
 
 # EMPLOYEE SIDE APPLICATION
 def sign_in(msg):
+    logging.info('Signing in')
     display_header(msg, 'LOGIN', 40)
 
     usrid     = 11*' ' + 'USER ID'
@@ -23,6 +27,7 @@ def sign_in(msg):
     password  = answers['password']
     employee  = sjtrophy.verify_emp_login(user_id, password)
 
+    logging.info('Sign in successful')
     if not employee[0]:
         sign_in(employee[1])
     branch_id = sjtrophy.select_row_from('employee', user_id)[0][5]
@@ -33,6 +38,7 @@ def sign_in(msg):
 
 
 def manager_main_menu(msg, emp_id, branch_id):
+    logging.info('Manager logged in')
     display_header(msg, 'MANAGER MENU', 40)
 
     sel_op    = 11*' ' + 'SELECT OPTION'
@@ -43,6 +49,7 @@ def manager_main_menu(msg, emp_id, branch_id):
     log_o     = 12*' ' + 'LOG OUT'
     questions = [inquirer.List('option', message= sel_op, choices=[new_o, view_o, mng_inv, mng_emp, log_o])]
     answers   = inquirer.prompt(questions)['option']
+    logging.debug('Selected option')
 
     if answers   == new_o:
         new_order(None, emp_id, branch_id)
@@ -80,6 +87,7 @@ def associate_main_menu(msg, emp_id, branch_id):
 # ------------------------------------- MENU OPTIONS --------------------------------------------
 
 def new_order(msg, emp_id, branch_id):
+    logging.info('Creating new order')
     display_header(msg, 'NEW ORDER', 40)
 
     new_cust = 11*' ' + "NEW CUSTOMER?"
@@ -91,8 +99,8 @@ def new_order(msg, emp_id, branch_id):
         new_customer(msg)
         # cid = new_customer()
     else:
-        cid = search_customer()
-        if None == cid:
+        c = sjtrophy.search_customer()
+        if None == c:
             cid = new_customer()
 
     itm_id    = 11*' ' + "ENTER ITEM ID"
@@ -103,13 +111,15 @@ def new_order(msg, emp_id, branch_id):
     questions = [inquirer.Text('item_id',   message=itm_id),
                  inquirer.Confirm('design', message=cust_dsg, default=False)]
     answers   = inquirer.prompt(questions)
-    # if answers['design']:
-    #     # insert new design
+    if answers['design']:
+        # insert new design
+    else:
     questions = [inquirer.Text('design_id',message=dsg_id),
                  inquirer.Text('count',    message=no_itms)]
     answers   = inquirer.prompt(questions)
     # get prices of item and design to derive total cost
     # insert into customer_order set count, status item, design, customer, last_ud_by, total_cost
+
 
     if sjtrophy.is_manager(emp_id):
         manager_main_menu(msg, emp_id, branch_id)
@@ -118,6 +128,7 @@ def new_order(msg, emp_id, branch_id):
 
 
 def view_orders(msg, emp_id, branch_id):
+    logging.info('Viewing Orders')
     sel_op    = 11*' ' + "SELECT OPTION"
     fltr      = 12*' ' + "FILTER"
     edt       = 12*' ' + "EDIT ORDER"
@@ -137,6 +148,7 @@ def view_orders(msg, emp_id, branch_id):
         answers   = inquirer.prompt(questions)['option']
 
         if fltr == answers:
+            logging.info('Filtering results')
             questions = [inquirer.Checkbox('sort_options', message=filt_res, choices=[new, old, cnt, cust, actv, cmpltd], default=[new])]
             answers   = inquirer.prompt(questions)['sort_options']
             order_by  = []
@@ -159,16 +171,20 @@ def view_orders(msg, emp_id, branch_id):
             display_paged_results(result, 'CUSTOMER ORDERS')
 
         elif edt == answers:
+            logging.info('Editing orders')
             print("TO DO: EDIT ORDER")
 
         elif sjtrophy.is_manager(emp_id):
+            logging.info('Returning to main menu')
             manager_main_menu(msg, emp_id, branch_id)
         else:
+            logging.info('Returning to main menu')
             associate_main_menu(msg, emp_id, branch_id)
 
 
 # TODO: Error checking
 def manage_employees(msg, emp_id, branch_id):
+    logging.info('Managing employees')
     display_header(msg, 'EMPLOYEE MANAGEMENT', 40)
     opt    = 11*' ' + 'SELECT OPTION'
     view   = 12*' ' + 'VIEW EMPLOYEES'
@@ -189,12 +205,14 @@ def manage_employees(msg, emp_id, branch_id):
 
     # View Employees
     if view == answers['option']:
+        logging.info('Viewing employees')
         branch_emp = sjtrophy.filter_search('employee', ('branch', branch_id), None)
         display_paged_results(branch_emp, None)
         manage_employees(None, emp_id, branch_id)
 
     # Add an Employee
     if add == answers['option']:
+        logging.info('Adding an employee')
         attr = []
         val  = []
         questions = [
@@ -214,23 +232,27 @@ def manage_employees(msg, emp_id, branch_id):
 
     # Remove an Employee
     elif rem == answers['option']:
+        logging.info('Removing an employee')
         questions = [inquirer.Text('eid', message=rem_id)]
         answers   = inquirer.prompt(questions)
         sjtrophy.delete_rows('employee', [('e_id', answers['eid'])])
     # Transfer an Employee
     elif tfr == answers['option']:
+        logging.info('Transferring an employee')
         questions = [inquirer.Text('e_id', message=tfr_id),
                      inquirer.Text('branch',message=b_id)]
         answers   = inquirer.prompt(questions)
         sjtrophy.update_row_values('employee', [('branch', answers['branch'])], answers['e_id'])
     # Return to main menu
     else:
+        logging.info('Returning to main menu')
         manager_main_menu(None, emp_id, branch_id)
 
     manage_employees(None, emp_id, branch_id)
 
 
 def inventory(msg, emp_id, branch_id):
+    logging.info('Managing inventory')
     sel_op     = 11*' ' + 'SELECT OPTION'
     sel_brnch  = 11*' ' + 'SELECT BRANCH'
     branch     = 12*' ' + 'BRANCH'
@@ -263,6 +285,7 @@ def inventory(msg, emp_id, branch_id):
         answers = inquirer.prompt(questions)['option']
 
         if answers  == branch:
+            logging.info('Selecting a branch')
             questions      = [inquirer.List('sel_brnch', message=sel_brnch, choices=branches)]
             branch_answers = inquirer.prompt(questions)['sel_brnch']
             if branch_answers == back:
@@ -270,6 +293,7 @@ def inventory(msg, emp_id, branch_id):
             curr_brnch = branch_map[branch_answers]
 
         elif answers == fltr:
+            logging.info('Filter')
             questions      = [inquirer.Checkbox('filter_options', message=fltr_by, choices=[type, cnt, prc])]
             filter_choices = inquirer.prompt(questions)['filter_options']
             filter     = []
@@ -284,6 +308,7 @@ def inventory(msg, emp_id, branch_id):
             display_paged_results(filtered_results, 'INVENTORY')
 
         elif answers == edit_inv:
+            logging.info('Edit inventory')
             edit_inventory(None, emp_id, branch_id)
 
         elif sjtrophy.is_manager(emp_id):
@@ -294,6 +319,7 @@ def inventory(msg, emp_id, branch_id):
 
 
 def edit_inventory(msg, emp_id, branch_id):
+    logging.info('Editing inventory')
     display_header(msg, 'INVENTORY', 40)
 
     sel_op    = 11*' ' + 'SELECT OPTION'
@@ -513,14 +539,27 @@ def new_customer(msg):
 
 
 def search_customer():
-    questions = [
-        inquirer.Text('cname',
-                      message="Enter customer name")
-    ]
+    name = 11 * ' ' + 'ENTER CUSTOMER NAME'
+    questions = [inquirer.Text('cname', message=name)]
     answers = inquirer.prompt(questions)
+    where_clause = "c_name = '{}' ".format(answers['cname'])
+    print(where_clause)
+    return sjtrophy.select_table_where('customer', where_clause)
 
-    # select from customer where cname = answers[cname]
-    # return cid or null
+
+def new_design():
+    size  = 11*' ' + 'ENTER DESIGN SIZE'
+    font  = 11*' ' + 'ENTER DESIGN FONT'
+    text  = 11*' ' + 'ENTER DESIGN TEXT'
+    price = 11*' ' + 'ENTER PRICE'
+    questions = [inquirer.Text('size', message=size),
+                 inquirer.Text('font', message=font),
+                 inquirer.Text('text', message=text),
+                 inquirer.Text('price', message=price)]
+    answers = inquirer.prompt(questions)
+    values = [answers['size'], answers['font'], answers['text'], answers['price']]
+    sjtrophy.insert_design(values)
+
 
 
 def encrypt_pw(pw, salt):
