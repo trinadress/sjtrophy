@@ -4,6 +4,9 @@ import inquirer
 from tabulate import tabulate
 from os import system, name
 import bcrypt
+import logging
+
+logging.basicConfig(filename='employee.log', level=logging.DEBUG)
 
 mydb = mysql.connector.connect(
     host='localhost',
@@ -18,6 +21,7 @@ cursor = mydb.cursor()
 # ---------------------------------------- HELPER -----------------------------------------------
 
 def display_results(tuples, attr_list):
+    logging.debug('Display Results')
     if not isinstance(tuples, list):
         tuple_list = []
         tuple_list.append(tuples)
@@ -27,6 +31,7 @@ def display_results(tuples, attr_list):
 
 # Returns column names of a table
 def retrieve_column_names(table):
+    logging.debug('Retrieve column names')
     sql     = "DESC {}".format(table)
     columns = []
     cursor.execute(sql)
@@ -37,6 +42,7 @@ def retrieve_column_names(table):
 
 
 def retrieve_key_from(table):
+    logging.debug('Retrieve key from table')
     sql = "SHOW KEYS FROM {} WHERE Key_name = 'PRIMARY'".format(table)
     cursor.execute(sql)
     result = cursor.fetchall()
@@ -46,6 +52,7 @@ def retrieve_key_from(table):
 # ---------------------------------------- INSERT -----------------------------------------------
 
 def insert_into_table(table, attributes, values):
+    logging.debug('Insert into table')
     attr = ", ".join(attributes)
     s    = []
     for _ in values:
@@ -91,6 +98,7 @@ def insert_customer(values):
 
 
 def update_row_values(table, set_values, row_id):
+    logging.debug('Update row values')
     pri_key = retrieve_key_from(table)
     sql     = 'UPDATE {}'.format(table)
     sql    += create_sql_clause('SET', set_values)
@@ -105,6 +113,7 @@ def update_row_values(table, set_values, row_id):
 
 
 def delete_rows(table, where_condition):
+    logging.debug('Delete rows')
     where = create_sql_clause('WHERE', where_condition)
     sql = "DELETE FROM {} {}".format(table, where)
     print(sql)
@@ -116,6 +125,7 @@ def delete_rows(table, where_condition):
 # ---------------------------------------- SELECT -----------------------------------------------
 
 def select_row_from(table, row_id):
+    logging.debug('Select row')
     pri_key   = retrieve_key_from(table)
     col_names = retrieve_column_names(table)
     sql       = "SELECT * FROM {} WHERE {} = %s".format(table, pri_key)
@@ -124,6 +134,7 @@ def select_row_from(table, row_id):
 
 
 def select_table(table):
+    logging.debug('Select table')
     col_names = retrieve_column_names(table)
     sql       = "SELECT * from {}".format(table)
     cursor.execute(sql)
@@ -131,6 +142,7 @@ def select_table(table):
 
 
 def select_table_where(table, condition):
+    logging.debug('Select table with condition')
     col_names = retrieve_column_names(table)
     sql       = "SELECT * from {} WHERE {}".format(table, condition)
     cursor.execute(sql)
@@ -142,6 +154,7 @@ def select_table_where(table, condition):
 
 
 def verify_emp_login(emp_id, pw):
+    logging.warning('Verifying employee login')
     emp = select_row_from('employee', emp_id)
     if not emp[0]:
         return (False, 'NO RECORD OF EMPLOYEE')
@@ -152,6 +165,7 @@ def verify_emp_login(emp_id, pw):
 
 
 def is_manager(emp_id):
+    logging.warning('Verifying manager')
     sql = "SELECT sup_id FROM employee WHERE e_id = %s"
     cursor.execute(sql, (emp_id,))
     result = cursor.fetchone()
@@ -161,6 +175,7 @@ def is_manager(emp_id):
 
 
 def sort_inventory(filter):
+    logging.debug('Sorting inventory')
     if not filter:
         sql  = "SELECT * FROM item"
     else:
@@ -170,6 +185,7 @@ def sort_inventory(filter):
 
 
 def filter_search(table, where, order_by):
+    logging.debug('Filter search')
     sql = 'SELECT * FROM {}'.format(table)
     if where:
         sql += create_sql_clause('WHERE', where)
@@ -181,6 +197,7 @@ def filter_search(table, where, order_by):
 
 
 def create_sql_clause(clause_name, vars_and_vals):
+    logging.debug('Creating SQL clause')
     my_list   = []
     clause = ''
     v_and_v = []
@@ -195,3 +212,10 @@ def create_sql_clause(clause_name, vars_and_vals):
             my_list.append("{} = {}".format(pair[0], pair[1]))
         clause += ' {} {}'.format(clause_name, ", ".join(my_list))
     return clause
+
+
+def get_max(table, value):
+    logging.debug('Getting maximum value')
+    sql = "SELECT MAX({}) FROM {}".format(value, table)
+    cursor.execute(sql)
+    return cursor.fetchall()

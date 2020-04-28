@@ -109,14 +109,18 @@ def new_order(msg, emp_id, branch_id):
     cust_dsg  = 11*' ' + "CUSTOM DESIGN?"
     msg       = 'ORDER COMPLETE'
     questions = [inquirer.Text('item_id',   message=itm_id),
-                 inquirer.Confirm('design', message=cust_dsg, default=False)]
+                 inquirer.Confirm('custom_d', message=cust_dsg, default=False)]
     answers   = inquirer.prompt(questions)
-    if answers['design']:
-        # insert new design
+    iid = answers['item_id']
+    if answers['custom_d']:
+        did = new_design()
     else:
-    questions = [inquirer.Text('design_id',message=dsg_id),
-                 inquirer.Text('count',    message=no_itms)]
-    answers   = inquirer.prompt(questions)
+        questions = [inquirer.Text('design_id',message=dsg_id)]
+        answers   = inquirer.prompt(questions)
+        did = answers['design_id']
+    question = [inquirer.Text('count', message=no_itms)]
+    answers = inquirer.prompt(questions)
+    count = answers['count']
     # get prices of item and design to derive total cost
     # insert into customer_order set count, status item, design, customer, last_ud_by, total_cost
 
@@ -341,7 +345,7 @@ def edit_inventory(msg, emp_id, branch_id):
 
 
 def update_item(msg, emp_id, branch_id):
-
+    logging.debug('Updating an item')
     while True:
         display_header(msg, 'INVENTORY', 40)
 
@@ -387,6 +391,7 @@ def update_item(msg, emp_id, branch_id):
 
 
 def add_item(msg, emp_id, branch_id):
+    logging.debug('Adding an item')
     press     = 11*' ' + 'PRESS'
     done      = 12*' ' + 'DONE'
     type      = 11*' ' + 'ENTER TYPE'
@@ -409,6 +414,7 @@ def add_item(msg, emp_id, branch_id):
 
 
 def remove_item(msg, emp_id, branch_id):
+    logging.debug('Removing an item')
     c_item     = 11*' ' + 'CHOOSE ITEM'
     press      = 11*' ' + 'PRESS'
     done       = 12*' ' + 'DONE'
@@ -459,6 +465,7 @@ def display_message(msg, width):
 
 
 def display_sj_trophy():
+    logging.debug('Displaying main logo')
     border = '--------------------------------------------------------------'
     result = pyfiglet.figlet_format("SJ TROPHY", font = "big" )
     print(border)
@@ -467,11 +474,13 @@ def display_sj_trophy():
 
 
 def display_row(table, row_id):
+    logging.debug('Display a single row')
     row = sjtrophy.select_row_from(table, row_id)
     sjtrophy.display_results(row[0], row[1])
 
 
 def display_paged_results(results, message):
+    logging.debug('Display query results in pages')
     index          = 0
     table_divided  = list_of_chunks(results[0], 10)
     length_of_id   = len(table_divided)
@@ -520,10 +529,12 @@ def format_str(msg, width):
 
 
 def list_of_chunks(lst, chunk_size):
+    logging.debug('Creating list of chunks for display')
     return list(divide_chunks(lst, chunk_size))
 
 
 def new_customer(msg):
+    logging.debug('Creating new customer')
     system('clear')
     display_sj_trophy()
     display_message('CUSTOMER SIGN UP')
@@ -539,6 +550,7 @@ def new_customer(msg):
 
 
 def search_customer():
+    logging.debug('Searching new customer')
     name = 11 * ' ' + 'ENTER CUSTOMER NAME'
     questions = [inquirer.Text('cname', message=name)]
     answers = inquirer.prompt(questions)
@@ -548,6 +560,7 @@ def search_customer():
 
 
 def new_design():
+    logging.debug('Creating new design')
     size  = 11*' ' + 'ENTER DESIGN SIZE'
     font  = 11*' ' + 'ENTER DESIGN FONT'
     text  = 11*' ' + 'ENTER DESIGN TEXT'
@@ -559,14 +572,16 @@ def new_design():
     answers = inquirer.prompt(questions)
     values = [answers['size'], answers['font'], answers['text'], answers['price']]
     sjtrophy.insert_design(values)
-
+    return sjtrophy.get_max('design', 'd_id')
 
 
 def encrypt_pw(pw, salt):
+    logging.debug('Encrypting password')
     return bcrypt.hashpw(pw, salt)
 
 
 def separate_key_value(dict):
+    logging.debug('Separate dictionary keys')
     keys = []
     vals = []
     for key in dict:
